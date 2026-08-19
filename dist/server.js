@@ -11,7 +11,7 @@ var __export = (target, all) => {
 };
 
 // server.ts
-import { defineRpcContract } from "@bb/plugin-sdk";
+import { defineRpcContract } from "@get-bb/plugin-sdk";
 
 // node_modules/zod/v4/classic/external.js
 var external_exports = {};
@@ -14703,6 +14703,12 @@ var REPO = external_exports.object({
   wired: external_exports.boolean(),
   /** A local hooksPath exists but points elsewhere (husky reset it). */
   drifted: external_exports.boolean(),
+  /**
+   * How to read the drift. "husky" is the churn case husky re-creates on every
+   * install; repointing is safe because the dispatcher forwards into it.
+   * "foreign" is an unknown owner we flag but never touch on our own.
+   */
+  driftKind: external_exports.enum(["husky", "foreign"]).nullable(),
   projectIds: external_exports.array(external_exports.string()),
   lastRun: external_exports.object({ at: external_exports.string(), outcome: external_exports.enum(["ok", "failed", "unknown"]) }).nullable()
 });
@@ -14804,6 +14810,10 @@ function plugin(bb) {
     if (p.startsWith("~/")) return path.join(HOME, p.slice(2));
     return p;
   }
+  function classifyDrift(hooksPath) {
+    if (hooksPath === null || hooksPath === HOOKS_DIR) return null;
+    return /(^|\/)\.husky(\/|$)/.test(hooksPath) ? "husky" : "foreign";
+  }
   function hash8(s) {
     return createHash("sha256").update(s).digest("hex").slice(0, 8);
   }
@@ -14891,6 +14901,7 @@ function plugin(bb) {
       hooksPath,
       wired: hooksPath === HOOKS_DIR,
       drifted: hooksPath !== null && hooksPath !== HOOKS_DIR,
+      driftKind: classifyDrift(hooksPath),
       projectIds,
       lastRun: parseLastRun(log)
     };
@@ -15176,7 +15187,10 @@ function plugin(bb) {
       globalWired: g === HOOKS_DIR,
       globalConflict: g !== null && g !== HOOKS_DIR,
       driftedRepos: drifted,
-      ready: hooksInstalled && !hooksStale && g === HOOKS_DIR && drifted.length === 0
+      // `ready` means the machine is wired. Per-repo drift is operational state
+      // surfaced in the mounted UI, not a bootstrap blocker — keeping it out of
+      // `ready` is what stops drift from ever gating the plugin.
+      ready: hooksInstalled && !hooksStale && g === HOOKS_DIR
     };
   }
   function setHooksPath(config2, value) {
@@ -15282,18 +15296,6 @@ function plugin(bb) {
       return { exitCode: 2, stderr: `unknown command: ${cmd}` };
     }
   });
-  void (async () => {
-    try {
-      const s = await readBootstrapStatus();
-      if (!s.ready) {
-        const why = !s.hooksInstalled ? "git hooks are not installed" : s.hooksStale ? "installed git hooks are out of date" : !s.globalWired ? `global core.hooksPath is ${s.globalHooksPath ?? "unset"}` : `${s.driftedRepos.length} repo(s) drifted`;
-        bb.status.needsConfiguration(
-          `${why}. Open Settings \u2192 Worktree Setup and run "Set up git hooks".`
-        );
-      }
-    } catch {
-    }
-  })();
 }
 export {
   plugin as default,

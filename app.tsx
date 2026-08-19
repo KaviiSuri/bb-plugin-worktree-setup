@@ -4,7 +4,7 @@ import {
   useBbContext,
   useRealtime,
   useRpc,
-} from "@bb/plugin-sdk/app";
+} from "@get-bb/plugin-sdk/app";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import type { rpcContract } from "./server";
@@ -21,6 +21,7 @@ type Repo = {
   hooksPath: string | null;
   wired: boolean;
   drifted: boolean;
+  driftKind: "husky" | "foreign" | null;
   projectIds: string[];
   lastRun: { at: string; outcome: "ok" | "failed" | "unknown" } | null;
 };
@@ -29,11 +30,11 @@ type Repo = {
 
 function Dot({ repo }: { repo: Repo }) {
   const cls = repo.drifted
-    ? "bg-[var(--attention)]"
+    ? "bg-attention"
     : repo.lastRun?.outcome === "failed"
       ? "bg-destructive"
       : repo.hasScript
-        ? "bg-[var(--success)]"
+        ? "bg-success"
         : "bg-muted";
   return <span className={`size-1.5 shrink-0 rounded-full ${cls}`} />;
 }
@@ -47,8 +48,8 @@ function Pill({
 }) {
   const tones = {
     neutral: "border-border text-muted-foreground",
-    ok: "border-[var(--success)] text-[var(--success)]",
-    warn: "border-[var(--warning-text)] text-[var(--warning-text)]",
+    ok: "border-success text-success",
+    warn: "border-warning-text text-warning-text",
     bad: "border-destructive text-destructive",
   } as const;
   return (
@@ -71,10 +72,10 @@ function LogView({ content }: { content: string }) {
     <pre className="max-h-64 overflow-auto whitespace-pre-wrap rounded-md border border-border bg-sidebar p-3 font-mono text-2xs leading-relaxed">
       {content.split("\n").map((line, i) => {
         let cls = "";
-        if (/^===\s+ok\s*$/.test(line)) cls = "text-[var(--success)]";
+        if (/^===\s+ok\s*$/.test(line)) cls = "text-success";
         else if (/^===\s+FAILED/.test(line)) cls = "text-destructive";
-        else if (/^===/.test(line)) cls = "text-[var(--timeline-accent)]";
-        else if (/WARNING|warn:/i.test(line)) cls = "text-[var(--warning-text)]";
+        else if (/^===/.test(line)) cls = "text-timeline-accent";
+        else if (/WARNING|warn:/i.test(line)) cls = "text-warning-text";
         return (
           <div key={i} className={cls}>
             {line || " "}
@@ -128,7 +129,7 @@ function ScriptEditor({ rpc, repoKey }: { rpc: Rpc; repoKey: string }) {
         value={text}
         spellCheck={false}
         onChange={(e) => setText(e.target.value)}
-        className="h-56 w-full resize-y rounded-md border border-border bg-sidebar p-3 font-mono text-2xs leading-relaxed outline-none focus:border-[var(--input)]"
+        className="h-56 w-full resize-y rounded-md border border-border bg-sidebar p-3 font-mono text-2xs leading-relaxed outline-none focus:border-input"
       />
       <div className="flex items-center gap-2">
         <Button size="sm" onClick={() => void save()} disabled={saving}>
@@ -145,16 +146,28 @@ function ScriptEditor({ rpc, repoKey }: { rpc: Rpc; repoKey: string }) {
 function DriftBanner({
   repo,
   onRepair,
+  didNotRun,
 }: {
   repo: Repo;
   onRepair: () => void | Promise<void>;
+  /** In a worktree thread, drift means setup already silently no-op'd here. */
+  didNotRun?: boolean;
 }) {
+  const husky = repo.driftKind === "husky";
   return (
-    <div className="mb-3 flex items-center gap-3 rounded-md border border-[var(--attention)] bg-[var(--surface-attention)] p-2.5 text-2xs">
+    <div className="mb-3 flex items-center gap-3 rounded-md border border-attention bg-surface-attention p-2.5 text-2xs">
       <span>
-        <b className="text-[var(--warning-text)]">hooksPath drift.</b> This repo points at{" "}
-        <code className="font-mono">{repo.hooksPath}</code>, so setup will not run. husky resets
-        this on every install.
+        <b className="text-warning-text">
+          {didNotRun ? "Setup did not run for this worktree." : "hooksPath drift."}
+        </b>{" "}
+        This repo points at <code className="font-mono">{repo.hooksPath}</code>, so bb bypasses the
+        dispatcher and {didNotRun ? "skipped" : "will skip"} setup on new worktrees.{" "}
+        {husky ? (
+          <>husky re-points this on every install — repair again after installs.</>
+        ) : (
+          <>Another tool owns <code className="font-mono">core.hooksPath</code>; repair only if you
+          did not set this deliberately.</>
+        )}
       </span>
       <Button size="sm" variant="outline" className="ml-auto shrink-0" onClick={() => void onRepair()}>
         Repair
@@ -225,6 +238,7 @@ function ThreadPanel({ threadId }: { threadId: string }) {
       {repo.drifted ? (
         <DriftBanner
           repo={repo}
+          didNotRun
           onRepair={async () => {
             const r = await rpc.call("repairDrift", { key: repo.key });
             if (r.repaired.length) toast.success("hooksPath repaired");
@@ -238,7 +252,7 @@ function ThreadPanel({ threadId }: { threadId: string }) {
         <Stat
           label="hooksPath"
           value={repo.wired ? "~/.githooks" : (repo.hooksPath ?? "unset")}
-          tone={repo.wired ? "text-[var(--success)]" : "text-[var(--warning-text)]"}
+          tone={repo.wired ? "text-success" : "text-warning-text"}
         />
         <Stat label="Setup script" value={repo.hasScript ? "present" : "missing"} />
         <Stat
@@ -248,7 +262,7 @@ function ThreadPanel({ threadId }: { threadId: string }) {
             repo.lastRun?.outcome === "failed"
               ? "text-destructive"
               : repo.lastRun?.outcome === "ok"
-                ? "text-[var(--success)]"
+                ? "text-success"
                 : undefined
           }
         />
@@ -286,7 +300,7 @@ function RepoRow({ repo, rpc, reload }: { repo: Repo; rpc: Rpc; reload: () => vo
     <div className="border-b border-border last:border-b-0">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left hover:bg-[var(--state-hover)]"
+        className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left hover:bg-state-hover"
       >
         <Dot repo={repo} />
         <span className="min-w-[150px] font-mono text-2xs">{repo.name}</span>
@@ -403,12 +417,11 @@ function BootstrapCard({ status, rpc, reload }: { status: any; rpc: Rpc; reload:
     status.hooksStale && "installed hooks are out of date",
     !status.globalWired &&
       `global core.hooksPath is ${status.globalHooksPath ?? "unset"}`,
-    status.driftedRepos.length > 0 && `${status.driftedRepos.length} repo(s) drifted`,
   ].filter(Boolean) as string[];
 
   return (
-    <div className="mb-4 rounded-lg border border-[var(--attention)] bg-[var(--surface-attention)] p-3.5">
-      <div className="mb-1 text-xs font-semibold text-[var(--warning-text)]">
+    <div className="mb-4 rounded-lg border border-attention bg-surface-attention p-3.5">
+      <div className="mb-1 text-xs font-semibold text-warning-text">
         Git hooks are not set up
       </div>
       <div className="mb-2.5 text-2xs text-muted-foreground">
@@ -438,13 +451,13 @@ function BootstrapCard({ status, rpc, reload }: { status: any; rpc: Rpc; reload:
         </div>
       ) : null}
       {steps ? (
-        <dl className="mt-3 space-y-1 border-t border-[var(--attention)] pt-2.5 text-2xs">
+        <dl className="mt-3 space-y-1 border-t border-attention pt-2.5 text-2xs">
           {steps.map((s) => (
             <div key={s.step} className="flex gap-2">
               <dt
                 className={
                   s.status === "done"
-                    ? "text-[var(--success)]"
+                    ? "text-success"
                     : s.status === "failed"
                       ? "text-destructive"
                       : "text-muted-foreground"
@@ -492,6 +505,42 @@ function SettingsSection() {
     <div>
       {boot && !boot.ready ? (
         <BootstrapCard status={boot} rpc={rpc} reload={() => void load()} />
+      ) : null}
+
+      {drifted.length > 0 ? (
+        <div className="mb-4 rounded-lg border border-attention bg-surface-attention p-3.5">
+          <div className="mb-1 text-xs font-semibold text-warning-text">
+            {drifted.length} repo{drifted.length > 1 ? "s" : ""} drifted
+          </div>
+          <div className="mb-3 text-2xs text-muted-foreground">
+            These repos point <code className="font-mono">core.hooksPath</code> away from the
+            dispatcher, so bb <b>silently skips setup</b> on their new worktrees until repaired.
+            {drifted.some((r) => r.driftKind === "husky")
+              ? " husky re-points on every install, so this can recur."
+              : ""}
+          </div>
+          <ul className="mb-3 space-y-0.5 font-mono text-2xs text-muted-foreground">
+            {drifted.map((r) => (
+              <li key={r.key}>
+                · {r.name}{" "}
+                <span className="text-warning-text">
+                  ({r.driftKind === "husky" ? "husky-managed" : "foreign owner"})
+                </span>
+              </li>
+            ))}
+          </ul>
+          <Button
+            size="sm"
+            onClick={async () => {
+              const r = await rpc.call("repairDrift", { key: null });
+              if (r.repaired.length) toast.success(`Repaired ${r.repaired.length}`);
+              if (r.failed.length) toast.error(`Could not repair ${r.failed.length}`);
+              void load();
+            }}
+          >
+            Repair all
+          </Button>
+        </div>
       ) : null}
 
       <div className="overflow-hidden rounded-lg border border-border">

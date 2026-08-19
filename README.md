@@ -83,11 +83,11 @@ reason the plugin exists rather than just a shell script.
 ## Development
 
 ```sh
-npm install
-npx tsc --noEmit
-bb plugin build
-bb plugin install .
-bb plugin dev          # watch + reload
+npm install            # installs the pinned bb-app used for builds
+npm run typecheck
+npm run build          # npx bb plugin build
+npx bb plugin install .
+npx bb plugin dev      # watch + reload
 ```
 
 `hooks.ts` is the source of truth for everything written to `~/.githooks`.

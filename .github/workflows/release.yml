@@ -41,9 +41,6 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Install bb
-        run: npm install -g bb-app
-
       - name: Install dependencies
         run: npm ci
 
@@ -78,7 +75,7 @@ jobs:
           fi
 
       - name: Build plugin
-        run: bb plugin build .
+        run: npx bb plugin build .
 
       - name: Commit, tag, and push
         run: |

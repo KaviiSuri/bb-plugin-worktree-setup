@@ -1,4 +1,4 @@
-import { defineRpcContract, type BbPluginApi } from "@bb/plugin-sdk";
+import { defineRpcContract, type BbPluginApi } from "@get-bb/plugin-sdk";
 import { z } from "zod";
 import { createHash } from "node:crypto";
 import { homedir } from "node:os";
@@ -39,6 +39,12 @@ const REPO = z.object({
   wired: z.boolean(),
   /** A local hooksPath exists but points elsewhere (husky reset it). */
   drifted: z.boolean(),
+  /**
+   * How to read the drift. "husky" is the churn case husky re-creates on every
+   * install; repointing is safe because the dispatcher forwards into it.
+   * "foreign" is an unknown owner we flag but never touch on our own.
+   */
+  driftKind: z.enum(["husky", "foreign"]).nullable(),
   projectIds: z.array(z.string()),
   lastRun: z
     .object({ at: z.string(), outcome: z.enum(["ok", "failed", "unknown"]) })
@@ -157,6 +163,16 @@ export default function plugin(bb: BbPluginApi) {
     return p;
   }
 
+  /**
+   * A drifted hooksPath under `.husky` is the benign churn case — husky
+   * re-points it on every install and the dispatcher forwards into it, so
+   * repair is safe. Anything else is an owner we don't recognise.
+   */
+  function classifyDrift(hooksPath: string | null): "husky" | "foreign" | null {
+    if (hooksPath === null || hooksPath === HOOKS_DIR) return null;
+    return /(^|\/)\.husky(\/|$)/.test(hooksPath) ? "husky" : "foreign";
+  }
+
   function hash8(s: string): string {
     return createHash("sha256").update(s).digest("hex").slice(0, 8);
   }
@@ -263,6 +279,7 @@ export default function plugin(bb: BbPluginApi) {
       hooksPath,
       wired: hooksPath === HOOKS_DIR,
       drifted: hooksPath !== null && hooksPath !== HOOKS_DIR,
+      driftKind: classifyDrift(hooksPath),
       projectIds,
       lastRun: parseLastRun(log),
     };
@@ -590,7 +607,10 @@ export default function plugin(bb: BbPluginApi) {
       globalWired: g === HOOKS_DIR,
       globalConflict: g !== null && g !== HOOKS_DIR,
       driftedRepos: drifted,
-      ready: hooksInstalled && !hooksStale && g === HOOKS_DIR && drifted.length === 0,
+      // `ready` means the machine is wired. Per-repo drift is operational state
+      // surfaced in the mounted UI, not a bootstrap blocker — keeping it out of
+      // `ready` is what stops drift from ever gating the plugin.
+      ready: hooksInstalled && !hooksStale && g === HOOKS_DIR,
     };
   }
 
@@ -708,25 +728,9 @@ export default function plugin(bb: BbPluginApi) {
     },
   });
 
-  // Surface an unwired machine as plugin status rather than a silent no-op.
-  // The settings section turns this into a one-click "Set up git hooks".
-  void (async () => {
-    try {
-      const s = await readBootstrapStatus();
-      if (!s.ready) {
-        const why = !s.hooksInstalled
-          ? "git hooks are not installed"
-          : s.hooksStale
-            ? "installed git hooks are out of date"
-            : !s.globalWired
-              ? `global core.hooksPath is ${s.globalHooksPath ?? "unset"}`
-              : `${s.driftedRepos.length} repo(s) drifted`;
-        bb.status.needsConfiguration(
-          `${why}. Open Settings → Worktree Setup and run "Set up git hooks".`,
-        );
-      }
-    } catch {
-      // Never let a status probe take the plugin down.
-    }
-  })();
+  // The plugin stays `running` no matter its bootstrap or drift state. bb-app
+  // only mounts a plugin's app bundle while it is running, so reporting
+  // `needs-configuration` here would hide the very Settings/thread UI that
+  // fixes an unwired machine or a drifted repo. Both are surfaced in-app (the
+  // BootstrapCard and the drift banners) and via `bb worktree-setup`.
 }

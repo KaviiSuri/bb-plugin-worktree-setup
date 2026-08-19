@@ -55,8 +55,9 @@ fi
 echo "==> releasing ${tag}"
 
 # --- build -----------------------------------------------------------------
+# Use the pinned bb-app devDependency so local and CI releases build identically.
 echo "==> building dist/"
-bb plugin build .
+npx bb plugin build .
 
 # --- commit + tag ----------------------------------------------------------
 git add package.json package-lock.json dist/

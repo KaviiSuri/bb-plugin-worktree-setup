@@ -1,62 +1,9 @@
-var __defProp = Object.defineProperty;
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
-};
-
 // bb-plugin-runtime-shim:react
-var react_exports = {};
-__export(react_exports, {
-  Activity: () => Activity,
-  Children: () => Children,
-  Component: () => Component,
-  Fragment: () => Fragment,
-  Profiler: () => Profiler,
-  PureComponent: () => PureComponent,
-  StrictMode: () => StrictMode,
-  Suspense: () => Suspense,
-  act: () => act,
-  cache: () => cache,
-  cacheSignal: () => cacheSignal,
-  captureOwnerStack: () => captureOwnerStack,
-  cloneElement: () => cloneElement,
-  createContext: () => createContext,
-  createElement: () => createElement,
-  createRef: () => createRef,
-  default: () => react_default,
-  forwardRef: () => forwardRef,
-  isValidElement: () => isValidElement,
-  lazy: () => lazy,
-  memo: () => memo,
-  startTransition: () => startTransition,
-  unstable_useCacheRefresh: () => unstable_useCacheRefresh,
-  use: () => use,
-  useActionState: () => useActionState,
-  useCallback: () => useCallback,
-  useContext: () => useContext,
-  useDebugValue: () => useDebugValue,
-  useDeferredValue: () => useDeferredValue,
-  useEffect: () => useEffect,
-  useEffectEvent: () => useEffectEvent,
-  useId: () => useId,
-  useImperativeHandle: () => useImperativeHandle,
-  useInsertionEffect: () => useInsertionEffect,
-  useLayoutEffect: () => useLayoutEffect,
-  useMemo: () => useMemo,
-  useOptimistic: () => useOptimistic,
-  useReducer: () => useReducer,
-  useRef: () => useRef,
-  useState: () => useState,
-  useSyncExternalStore: () => useSyncExternalStore,
-  useTransition: () => useTransition,
-  version: () => version
-});
 var runtime = globalThis.__bbPluginRuntime;
 if (runtime == null || runtime.react == null) {
   throw new Error('Cannot load "react": this bundle must be loaded by the BB app, which provides the shared plugin runtime (globalThis.__bbPluginRuntime).');
 }
 var mod = runtime.react;
-var react_default = mod;
 var {
   Activity,
   Children,
@@ -102,10 +49,10 @@ var {
   version
 } = mod;
 
-// bb-plugin-runtime-shim:@bb/plugin-sdk/app
+// bb-plugin-runtime-shim:@get-bb/plugin-sdk/app
 var runtime2 = globalThis.__bbPluginRuntime;
 if (runtime2 == null || runtime2.pluginSdkApp == null) {
-  throw new Error('Cannot load "@bb/plugin-sdk/app": this bundle must be loaded by the BB app, which provides the shared plugin runtime (globalThis.__bbPluginRuntime).');
+  throw new Error('Cannot load "@get-bb/plugin-sdk/app": this bundle must be loaded by the BB app, which provides the shared plugin runtime (globalThis.__bbPluginRuntime).');
 }
 var mod2 = runtime2.pluginSdkApp;
 var {
@@ -139,183 +86,6 @@ var {
   useSonner
 } = mod3;
 
-// node_modules/@radix-ui/react-compose-refs/dist/index.mjs
-var __defProp2 = Object.defineProperty;
-var __name = (target, value) => __defProp2(target, "name", { value, configurable: true });
-function setRef(ref, value) {
-  if (typeof ref === "function") {
-    return ref(value);
-  } else if (ref !== null && ref !== void 0) {
-    ref.current = value;
-  }
-}
-__name(setRef, "setRef");
-function composeRefs(...refs) {
-  return (node) => {
-    let hasCleanup = false;
-    const cleanups = refs.map((ref) => {
-      const cleanup = setRef(ref, node);
-      if (!hasCleanup && typeof cleanup == "function") {
-        hasCleanup = true;
-      }
-      return cleanup;
-    });
-    if (hasCleanup) {
-      return () => {
-        for (let i = 0; i < cleanups.length; i++) {
-          const cleanup = cleanups[i];
-          if (typeof cleanup == "function") {
-            cleanup();
-          } else {
-            setRef(refs[i], null);
-          }
-        }
-      };
-    }
-  };
-}
-__name(composeRefs, "composeRefs");
-function useComposedRefs(...refs) {
-  return useCallback(composeRefs(...refs), refs);
-}
-__name(useComposedRefs, "useComposedRefs");
-
-// node_modules/@radix-ui/react-slot/dist/index.mjs
-var __defProp3 = Object.defineProperty;
-var __name2 = (target, value) => __defProp3(target, "name", { value, configurable: true });
-// @__NO_SIDE_EFFECTS__
-function createSlot(ownerName) {
-  const Slot2 = forwardRef((props, forwardedRef) => {
-    let { children, ...slotProps } = props;
-    let slottableElement = null;
-    let hasSlottable = false;
-    const newChildren = [];
-    if (isLazyComponent(children) && typeof use2 === "function") {
-      children = use2(children._payload);
-    }
-    Children.forEach(children, (maybeSlottable) => {
-      if (isSlottable(maybeSlottable)) {
-        hasSlottable = true;
-        const slottable = maybeSlottable;
-        let child = "child" in slottable.props ? slottable.props.child : slottable.props.children;
-        if (isLazyComponent(child) && typeof use2 === "function") {
-          child = use2(child._payload);
-        }
-        slottableElement = getSlottableElementFromSlottable(slottable, child);
-        newChildren.push(slottableElement?.props?.children);
-      } else {
-        newChildren.push(maybeSlottable);
-      }
-    });
-    if (slottableElement) {
-      slottableElement = cloneElement(slottableElement, void 0, newChildren);
-    } else if (
-      // A `Slottable` was found but it didn't resolve to a single element (e.g.
-      // it wrapped multiple elements, text, or a render-prop `child` that
-      // wasn't an element). Don't fall back to treating the `Slottable` wrapper
-      // itself as the slot target — throw a descriptive error below instead.
-      !hasSlottable && Children.count(children) === 1 && isValidElement(children)
-    ) {
-      slottableElement = children;
-    }
-    const slottableElementRef = slottableElement ? getElementRef(slottableElement) : void 0;
-    const composedRef = useComposedRefs(forwardedRef, slottableElementRef);
-    if (!slottableElement) {
-      if (children || children === 0) {
-        throw new Error(
-          hasSlottable ? createSlottableError(ownerName) : createSlotError(ownerName)
-        );
-      }
-      return children;
-    }
-    const mergedProps = mergeProps(slotProps, slottableElement.props ?? {});
-    if (slottableElement.type !== Fragment) {
-      mergedProps.ref = forwardedRef ? composedRef : slottableElementRef;
-    }
-    return cloneElement(slottableElement, mergedProps);
-  });
-  Slot2.displayName = `${ownerName}.Slot`;
-  return Slot2;
-}
-__name2(createSlot, "createSlot");
-var Slot = /* @__PURE__ */ createSlot("Slot");
-var SLOTTABLE_IDENTIFIER = /* @__PURE__ */ Symbol.for("radix.slottable");
-// @__NO_SIDE_EFFECTS__
-function createSlottable(ownerName) {
-  const Slottable2 = /* @__PURE__ */ __name2((props) => "child" in props ? props.children(props.child) : props.children, "Slottable");
-  Slottable2.displayName = `${ownerName}.Slottable`;
-  Slottable2.__radixId = SLOTTABLE_IDENTIFIER;
-  return Slottable2;
-}
-__name2(createSlottable, "createSlottable");
-var getSlottableElementFromSlottable = /* @__PURE__ */ __name2((slottable, child) => {
-  if ("child" in slottable.props) {
-    const child2 = slottable.props.child;
-    if (!isValidElement(child2)) return null;
-    return cloneElement(child2, void 0, slottable.props.children(child2.props.children));
-  }
-  return isValidElement(child) ? child : null;
-}, "getSlottableElementFromSlottable");
-function mergeProps(slotProps, childProps) {
-  const overrideProps = { ...childProps };
-  for (const propName in childProps) {
-    const slotPropValue = slotProps[propName];
-    const childPropValue = childProps[propName];
-    const isHandler = /^on[A-Z]/.test(propName);
-    if (isHandler) {
-      if (slotPropValue && childPropValue) {
-        overrideProps[propName] = (...args) => {
-          const result = childPropValue(...args);
-          slotPropValue(...args);
-          return result;
-        };
-      } else if (slotPropValue) {
-        overrideProps[propName] = slotPropValue;
-      }
-    } else if (propName === "style") {
-      overrideProps[propName] = { ...slotPropValue, ...childPropValue };
-    } else if (propName === "className") {
-      overrideProps[propName] = [slotPropValue, childPropValue].filter(Boolean).join(" ");
-    }
-  }
-  return { ...slotProps, ...overrideProps };
-}
-__name2(mergeProps, "mergeProps");
-function getElementRef(element) {
-  let getter = Object.getOwnPropertyDescriptor(element.props, "ref")?.get;
-  let mayWarn = getter && "isReactWarning" in getter && getter.isReactWarning;
-  if (mayWarn) {
-    return element.ref;
-  }
-  getter = Object.getOwnPropertyDescriptor(element, "ref")?.get;
-  mayWarn = getter && "isReactWarning" in getter && getter.isReactWarning;
-  if (mayWarn) {
-    return element.props.ref;
-  }
-  return element.props.ref || element.ref;
-}
-__name2(getElementRef, "getElementRef");
-function isSlottable(child) {
-  return isValidElement(child) && typeof child.type === "function" && "__radixId" in child.type && child.type.__radixId === SLOTTABLE_IDENTIFIER;
-}
-__name2(isSlottable, "isSlottable");
-var REACT_LAZY_TYPE = /* @__PURE__ */ Symbol.for("react.lazy");
-function isLazyComponent(element) {
-  return element != null && typeof element === "object" && "$$typeof" in element && element.$$typeof === REACT_LAZY_TYPE && "_payload" in element && isPromiseLike(element._payload);
-}
-__name2(isLazyComponent, "isLazyComponent");
-function isPromiseLike(value) {
-  return typeof value === "object" && value !== null && "then" in value;
-}
-__name2(isPromiseLike, "isPromiseLike");
-var createSlotError = /* @__PURE__ */ __name2((ownerName) => {
-  return `${ownerName} failed to slot onto its children. Expected a single React element child or \`Slottable\`.`;
-}, "createSlotError");
-var createSlottableError = /* @__PURE__ */ __name2((ownerName) => {
-  return `${ownerName} failed to slot onto its \`Slottable\`. Expected \`Slottable\` to receive a single React element child.`;
-}, "createSlottableError");
-var use2 = react_exports[" use ".trim().toString()];
-
 // node_modules/clsx/dist/clsx.mjs
 function r(e) {
   var t, f, n = "";
@@ -330,48 +100,6 @@ function clsx() {
   for (var e, t, f = 0, n = "", o = arguments.length; f < o; f++) (e = arguments[f]) && (t = r(e)) && (n && (n += " "), n += t);
   return n;
 }
-
-// node_modules/class-variance-authority/dist/index.mjs
-var falsyToString = (value) => typeof value === "boolean" ? `${value}` : value === 0 ? "0" : value;
-var cx = clsx;
-var cva = (base, config) => (props) => {
-  var _config_compoundVariants;
-  if ((config === null || config === void 0 ? void 0 : config.variants) == null) return cx(base, props === null || props === void 0 ? void 0 : props.class, props === null || props === void 0 ? void 0 : props.className);
-  const { variants, defaultVariants } = config;
-  const getVariantClassNames = Object.keys(variants).map((variant) => {
-    const variantProp = props === null || props === void 0 ? void 0 : props[variant];
-    const defaultVariantProp = defaultVariants === null || defaultVariants === void 0 ? void 0 : defaultVariants[variant];
-    if (variantProp === null) return null;
-    const variantKey = falsyToString(variantProp) || falsyToString(defaultVariantProp);
-    return variants[variant][variantKey];
-  });
-  const propsWithoutUndefined = props && Object.entries(props).reduce((acc, param) => {
-    let [key, value] = param;
-    if (value === void 0) {
-      return acc;
-    }
-    acc[key] = value;
-    return acc;
-  }, {});
-  const getCompoundVariantClassNames = config === null || config === void 0 ? void 0 : (_config_compoundVariants = config.compoundVariants) === null || _config_compoundVariants === void 0 ? void 0 : _config_compoundVariants.reduce((acc, param) => {
-    let { class: cvClass, className: cvClassName, ...compoundVariantOptions } = param;
-    return Object.entries(compoundVariantOptions).every((param2) => {
-      let [key, value] = param2;
-      return Array.isArray(value) ? value.includes({
-        ...defaultVariants,
-        ...propsWithoutUndefined
-      }[key]) : {
-        ...defaultVariants,
-        ...propsWithoutUndefined
-      }[key] === value;
-    }) ? [
-      ...acc,
-      cvClass,
-      cvClassName
-    ] : acc;
-  }, []);
-  return cx(base, getVariantClassNames, getCompoundVariantClassNames, props === null || props === void 0 ? void 0 : props.class, props === null || props === void 0 ? void 0 : props.className);
-};
 
 // node_modules/tailwind-merge/dist/bundle-mjs.mjs
 var concatArrays = (array1, array2) => {
@@ -3632,9 +3360,6 @@ function cn(...inputs) {
   return twMerge(clsx(inputs));
 }
 
-// components/ui/motion.ts
-var CONTROL_HOVER_TRANSITION = "transition-colors duration-150 hover:duration-0";
-
 // bb-plugin-runtime-shim:react/jsx-runtime
 var runtime4 = globalThis.__bbPluginRuntime;
 if (runtime4 == null || runtime4.jsxRuntime == null) {
@@ -3648,49 +3373,36 @@ var {
 } = mod4;
 
 // components/ui/button.tsx
-var buttonVariants = cva(
-  `inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ${CONTROL_HOVER_TRANSITION} focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0`,
-  {
-    variants: {
-      variant: {
-        default: "bg-foreground text-background hover:bg-foreground/90",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline: "border border-input bg-transparent hover:bg-state-hover hover:text-foreground",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-state-hover hover:text-foreground aria-pressed:bg-state-active aria-pressed:text-foreground aria-pressed:hover:bg-state-active data-[state=open]:bg-state-active data-[state=open]:text-foreground data-[state=open]:hover:bg-state-active",
-        link: "text-primary underline-offset-4 hover:underline"
-      },
-      size: {
-        default: "h-9 px-4 py-2",
-        sm: "h-8 rounded-md px-3 text-xs",
-        lg: "h-10 rounded-md px-8",
-        icon: "h-9 w-9"
-      }
-    },
-    defaultVariants: {
-      variant: "default",
-      size: "default"
-    }
-  }
-);
+var BASE = "inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors duration-150 hover:duration-0 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0";
+var VARIANTS = {
+  default: "bg-foreground text-background hover:bg-foreground/90",
+  destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+  outline: "border border-input bg-transparent hover:bg-state-hover hover:text-foreground",
+  secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+  ghost: "hover:bg-state-hover hover:text-foreground aria-pressed:bg-state-active aria-pressed:text-foreground data-[state=open]:bg-state-active data-[state=open]:text-foreground",
+  link: "text-primary underline-offset-4 hover:underline"
+};
+var SIZES = {
+  default: "h-9 px-4 py-2",
+  sm: "h-8 rounded-md px-3 text-xs",
+  lg: "h-10 rounded-md px-8",
+  icon: "h-9 w-9"
+};
 var Button = forwardRef(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : "button";
-    return /* @__PURE__ */ jsx(
-      Comp,
-      {
-        className: cn(buttonVariants({ variant, size, className })),
-        ref,
-        ...props
-      }
-    );
-  }
+  ({ className, variant = "default", size = "default", ...props }, ref) => /* @__PURE__ */ jsx(
+    "button",
+    {
+      ref,
+      className: cn(BASE, VARIANTS[variant], SIZES[size], className),
+      ...props
+    }
+  )
 );
 Button.displayName = "Button";
 
 // app.tsx
 function Dot({ repo }) {
-  const cls = repo.drifted ? "bg-[var(--attention)]" : repo.lastRun?.outcome === "failed" ? "bg-destructive" : repo.hasScript ? "bg-[var(--success)]" : "bg-muted";
+  const cls = repo.drifted ? "bg-attention" : repo.lastRun?.outcome === "failed" ? "bg-destructive" : repo.hasScript ? "bg-success" : "bg-muted";
   return /* @__PURE__ */ jsx("span", { className: `size-1.5 shrink-0 rounded-full ${cls}` });
 }
 function Pill({
@@ -3699,8 +3411,8 @@ function Pill({
 }) {
   const tones = {
     neutral: "border-border text-muted-foreground",
-    ok: "border-[var(--success)] text-[var(--success)]",
-    warn: "border-[var(--warning-text)] text-[var(--warning-text)]",
+    ok: "border-success text-success",
+    warn: "border-warning-text text-warning-text",
     bad: "border-destructive text-destructive"
   };
   return /* @__PURE__ */ jsx("span", { className: `rounded-full border px-2 py-px font-mono text-2xs ${tones[tone]}`, children });
@@ -3711,10 +3423,10 @@ function LogView({ content }) {
   }
   return /* @__PURE__ */ jsx("pre", { className: "max-h-64 overflow-auto whitespace-pre-wrap rounded-md border border-border bg-sidebar p-3 font-mono text-2xs leading-relaxed", children: content.split("\n").map((line, i) => {
     let cls = "";
-    if (/^===\s+ok\s*$/.test(line)) cls = "text-[var(--success)]";
+    if (/^===\s+ok\s*$/.test(line)) cls = "text-success";
     else if (/^===\s+FAILED/.test(line)) cls = "text-destructive";
-    else if (/^===/.test(line)) cls = "text-[var(--timeline-accent)]";
-    else if (/WARNING|warn:/i.test(line)) cls = "text-[var(--warning-text)]";
+    else if (/^===/.test(line)) cls = "text-timeline-accent";
+    else if (/WARNING|warn:/i.test(line)) cls = "text-warning-text";
     return /* @__PURE__ */ jsx("div", { className: cls, children: line || "\xA0" }, i);
   }) });
 }
@@ -3759,7 +3471,7 @@ function ScriptEditor({ rpc, repoKey }) {
         value: text,
         spellCheck: false,
         onChange: (e) => setText(e.target.value),
-        className: "h-56 w-full resize-y rounded-md border border-border bg-sidebar p-3 font-mono text-2xs leading-relaxed outline-none focus:border-[var(--input)]"
+        className: "h-56 w-full resize-y rounded-md border border-border bg-sidebar p-3 font-mono text-2xs leading-relaxed outline-none focus:border-input"
       }
     ),
     /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-2", children: [
@@ -3774,15 +3486,25 @@ function ScriptEditor({ rpc, repoKey }) {
 }
 function DriftBanner({
   repo,
-  onRepair
+  onRepair,
+  didNotRun
 }) {
-  return /* @__PURE__ */ jsxs("div", { className: "mb-3 flex items-center gap-3 rounded-md border border-[var(--attention)] bg-[var(--surface-attention)] p-2.5 text-2xs", children: [
+  const husky = repo.driftKind === "husky";
+  return /* @__PURE__ */ jsxs("div", { className: "mb-3 flex items-center gap-3 rounded-md border border-attention bg-surface-attention p-2.5 text-2xs", children: [
     /* @__PURE__ */ jsxs("span", { children: [
-      /* @__PURE__ */ jsx("b", { className: "text-[var(--warning-text)]", children: "hooksPath drift." }),
-      " This repo points at",
+      /* @__PURE__ */ jsx("b", { className: "text-warning-text", children: didNotRun ? "Setup did not run for this worktree." : "hooksPath drift." }),
       " ",
+      "This repo points at ",
       /* @__PURE__ */ jsx("code", { className: "font-mono", children: repo.hooksPath }),
-      ", so setup will not run. husky resets this on every install."
+      ", so bb bypasses the dispatcher and ",
+      didNotRun ? "skipped" : "will skip",
+      " setup on new worktrees.",
+      " ",
+      husky ? /* @__PURE__ */ jsx(Fragment2, { children: "husky re-points this on every install \u2014 repair again after installs." }) : /* @__PURE__ */ jsxs(Fragment2, { children: [
+        "Another tool owns ",
+        /* @__PURE__ */ jsx("code", { className: "font-mono", children: "core.hooksPath" }),
+        "; repair only if you did not set this deliberately."
+      ] })
     ] }),
     /* @__PURE__ */ jsx(Button, { size: "sm", variant: "outline", className: "ml-auto shrink-0", onClick: () => void onRepair(), children: "Repair" })
   ] });
@@ -3832,6 +3554,7 @@ function ThreadPanel({ threadId }) {
       DriftBanner,
       {
         repo,
+        didNotRun: true,
         onRepair: async () => {
           const r2 = await rpc.call("repairDrift", { key: repo.key });
           if (r2.repaired.length) toast.success("hooksPath repaired");
@@ -3846,7 +3569,7 @@ function ThreadPanel({ threadId }) {
         {
           label: "hooksPath",
           value: repo.wired ? "~/.githooks" : repo.hooksPath ?? "unset",
-          tone: repo.wired ? "text-[var(--success)]" : "text-[var(--warning-text)]"
+          tone: repo.wired ? "text-success" : "text-warning-text"
         }
       ),
       /* @__PURE__ */ jsx(Stat, { label: "Setup script", value: repo.hasScript ? "present" : "missing" }),
@@ -3855,7 +3578,7 @@ function ThreadPanel({ threadId }) {
         {
           label: "Last run",
           value: repo.lastRun ? `${repo.lastRun.outcome} \xB7 ${repo.lastRun.at.slice(5)}` : "never",
-          tone: repo.lastRun?.outcome === "failed" ? "text-destructive" : repo.lastRun?.outcome === "ok" ? "text-[var(--success)]" : void 0
+          tone: repo.lastRun?.outcome === "failed" ? "text-destructive" : repo.lastRun?.outcome === "ok" ? "text-success" : void 0
         }
       )
     ] }),
@@ -3880,7 +3603,7 @@ function RepoRow({ repo, rpc, reload }) {
       "button",
       {
         onClick: () => setOpen((v) => !v),
-        className: "flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left hover:bg-[var(--state-hover)]",
+        className: "flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left hover:bg-state-hover",
         children: [
           /* @__PURE__ */ jsx(Dot, { repo }),
           /* @__PURE__ */ jsx("span", { className: "min-w-[150px] font-mono text-2xs", children: repo.name }),
@@ -3974,11 +3697,10 @@ function BootstrapCard({ status, rpc, reload }) {
   const problems = [
     !status.hooksInstalled && "hook scripts are not installed",
     status.hooksStale && "installed hooks are out of date",
-    !status.globalWired && `global core.hooksPath is ${status.globalHooksPath ?? "unset"}`,
-    status.driftedRepos.length > 0 && `${status.driftedRepos.length} repo(s) drifted`
+    !status.globalWired && `global core.hooksPath is ${status.globalHooksPath ?? "unset"}`
   ].filter(Boolean);
-  return /* @__PURE__ */ jsxs("div", { className: "mb-4 rounded-lg border border-[var(--attention)] bg-[var(--surface-attention)] p-3.5", children: [
-    /* @__PURE__ */ jsx("div", { className: "mb-1 text-xs font-semibold text-[var(--warning-text)]", children: "Git hooks are not set up" }),
+  return /* @__PURE__ */ jsxs("div", { className: "mb-4 rounded-lg border border-attention bg-surface-attention p-3.5", children: [
+    /* @__PURE__ */ jsx("div", { className: "mb-1 text-xs font-semibold text-warning-text", children: "Git hooks are not set up" }),
     /* @__PURE__ */ jsxs("div", { className: "mb-2.5 text-2xs text-muted-foreground", children: [
       "Worktree setup runs from a git ",
       /* @__PURE__ */ jsx("code", { className: "font-mono", children: "post-checkout" }),
@@ -4000,11 +3722,11 @@ function BootstrapCard({ status, rpc, reload }) {
       /* @__PURE__ */ jsx("code", { className: "font-mono", children: status.globalHooksPath }),
       ". It will not be replaced unless you choose to."
     ] }) : null,
-    steps ? /* @__PURE__ */ jsx("dl", { className: "mt-3 space-y-1 border-t border-[var(--attention)] pt-2.5 text-2xs", children: steps.map((s) => /* @__PURE__ */ jsxs("div", { className: "flex gap-2", children: [
+    steps ? /* @__PURE__ */ jsx("dl", { className: "mt-3 space-y-1 border-t border-attention pt-2.5 text-2xs", children: steps.map((s) => /* @__PURE__ */ jsxs("div", { className: "flex gap-2", children: [
       /* @__PURE__ */ jsx(
         "dt",
         {
-          className: s.status === "done" ? "text-[var(--success)]" : s.status === "failed" ? "text-destructive" : "text-muted-foreground",
+          className: s.status === "done" ? "text-success" : s.status === "failed" ? "text-destructive" : "text-muted-foreground",
           children: s.status === "done" ? "\u2713" : s.status === "failed" ? "\u2715" : "\u2013"
         }
       ),
@@ -4036,6 +3758,45 @@ function SettingsSection() {
   const drifted = repos.filter((r2) => r2.drifted);
   return /* @__PURE__ */ jsxs("div", { children: [
     boot && !boot.ready ? /* @__PURE__ */ jsx(BootstrapCard, { status: boot, rpc, reload: () => void load() }) : null,
+    drifted.length > 0 ? /* @__PURE__ */ jsxs("div", { className: "mb-4 rounded-lg border border-attention bg-surface-attention p-3.5", children: [
+      /* @__PURE__ */ jsxs("div", { className: "mb-1 text-xs font-semibold text-warning-text", children: [
+        drifted.length,
+        " repo",
+        drifted.length > 1 ? "s" : "",
+        " drifted"
+      ] }),
+      /* @__PURE__ */ jsxs("div", { className: "mb-3 text-2xs text-muted-foreground", children: [
+        "These repos point ",
+        /* @__PURE__ */ jsx("code", { className: "font-mono", children: "core.hooksPath" }),
+        " away from the dispatcher, so bb ",
+        /* @__PURE__ */ jsx("b", { children: "silently skips setup" }),
+        " on their new worktrees until repaired.",
+        drifted.some((r2) => r2.driftKind === "husky") ? " husky re-points on every install, so this can recur." : ""
+      ] }),
+      /* @__PURE__ */ jsx("ul", { className: "mb-3 space-y-0.5 font-mono text-2xs text-muted-foreground", children: drifted.map((r2) => /* @__PURE__ */ jsxs("li", { children: [
+        "\xB7 ",
+        r2.name,
+        " ",
+        /* @__PURE__ */ jsxs("span", { className: "text-warning-text", children: [
+          "(",
+          r2.driftKind === "husky" ? "husky-managed" : "foreign owner",
+          ")"
+        ] })
+      ] }, r2.key)) }),
+      /* @__PURE__ */ jsx(
+        Button,
+        {
+          size: "sm",
+          onClick: async () => {
+            const r2 = await rpc.call("repairDrift", { key: null });
+            if (r2.repaired.length) toast.success(`Repaired ${r2.repaired.length}`);
+            if (r2.failed.length) toast.error(`Could not repair ${r2.failed.length}`);
+            void load();
+          },
+          children: "Repair all"
+        }
+      )
+    ] }) : null,
     /* @__PURE__ */ jsxs("div", { className: "overflow-hidden rounded-lg border border-border", children: [
       /* @__PURE__ */ jsxs("div", { className: "border-b border-border px-3.5 pb-2.5 pt-3", children: [
         /* @__PURE__ */ jsx("div", { className: "text-xs font-semibold", children: "Repositories" }),
