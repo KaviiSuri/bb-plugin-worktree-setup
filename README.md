@@ -93,6 +93,30 @@ bb plugin dev          # watch + reload
 `hooks.ts` is the source of truth for everything written to `~/.githooks`.
 Edit it there and re-run bootstrap; never hand-edit the installed copies.
 
+## Releasing
+
+Releases are git tags (`vX.Y.Z`) that users pin against:
+
+```sh
+bb plugin install git:https://github.com/KaviiSuri/bb-plugin-worktree-setup.git@v0.2.0
+```
+
+Either flow bumps the version in `package.json`, rebuilds `dist/`, commits both,
+and creates an annotated `vX.Y.Z` tag so the tagged commit always carries a
+fresh build.
+
+**Locally** — nothing is pushed unless you pass `--push`:
+
+```sh
+scripts/release.sh patch          # 0.1.0 -> 0.1.1, commit + tag only
+scripts/release.sh minor --push   # bump, build, tag, and push to origin
+scripts/release.sh 1.4.2 --push   # explicit version
+```
+
+**On demand via GitHub** — run the **Release** workflow from the Actions tab
+(or `gh workflow run release.yml -f bump=patch`). Pick `patch`/`minor`/`major`,
+or `custom` with an exact version; it bumps, builds, tags, and pushes for you.
+
 ## License
 
 MIT
